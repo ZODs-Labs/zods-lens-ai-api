@@ -37,7 +37,7 @@ jobs:
           context: "{{defaultContext}}:src"
           file: API/ZODs.Api/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/zods-api:${{ steps.set_docker_image_tag.outputs.docker_image_tag }}
+          tags: ghcr.io/${{ github.repository_owner }}/zods-lens-ai-api:${{ steps.set_docker_image_tag.outputs.docker_image_tag }}
 
   create-environment-variables:
     name: Configure Kubernetes Environment
