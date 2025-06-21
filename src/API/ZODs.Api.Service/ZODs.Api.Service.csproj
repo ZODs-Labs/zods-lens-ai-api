@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="AutoMapper" Version="12.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\AI\ZODs.AI.OpenAI\ZODs.AI.OpenAI.csproj" />
+		<ProjectReference Include="..\..\Common\ZODs.Common\ZODs.Common.csproj" />
+		<ProjectReference Include="..\..\Payment\ZODs.Payment\ZODs.Payment.csproj" />
+		<ProjectReference Include="..\ZODs.Api.Common\ZODs.Api.Common.csproj" />
+		<ProjectReference Include="..\ZODs.Api.Identity\ZODs.Api.Identity.csproj" />
+		<ProjectReference Include="..\ZODs.Api.Repository\ZODs.Api.Repository.csproj" />
+	</ItemGroup>
+
+</Project>

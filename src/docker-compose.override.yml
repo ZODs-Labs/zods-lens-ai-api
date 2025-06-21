@@ -1,0 +1,9 @@
+version: '3.4'
+
+services:
+  zods.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ~/.microsoft/usersecrets:/root/.microsoft/usersecrets:ro
+      

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zods-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: zods-api
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+         name: zods-api
+    spec:
+      containers:
+        - name: zods-api
+          # This image name will be replaced by the CI/CD pipeline
+          image: ghcr.io/soleng001/zods-api:v2.0.0
+          imagePullPolicy: Always
+          # livenessProbe:
+          #   failureThreshold: 3
+          #   httpGet:
+          #     path: /
+          #     port: 3000
+          #     scheme: HTTP
+          #   periodSeconds: 10
+          #   successThreshold: 1
+          #   timeoutSeconds: 1
+          #   initialDelaySeconds: 60
+          # readinessProbe:
+          #   failureThreshold: 3
+          #   httpGet:
+          #     path: /
+          #     port: 3000
+          #     scheme: HTTP
+          #   periodSeconds: 10
+          #   successThreshold: 1
+          #   timeoutSeconds: 10
+          #   initialDelaySeconds: 30
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: zods-api-env-variables-map
+            - secretRef:
+                name: zods-api-env-secrets
+          resources:
+            requests:
+              cpu: 500m
+              memory: 500Mi
+            limits:
+              cpu: 600m
+              memory: 600Mi
+      imagePullSecrets:
+        - name: ghcr-secret

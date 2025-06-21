@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="Files\cl100k_base.tiktoken" />
+		<None Remove="Files\p50k_base.tiktoken" />
+		<None Remove="Files\r50k_base.tiktoken" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="Files\cl100k_base.tiktoken">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Files\p50k_base.tiktoken">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Files\r50k_base.tiktoken">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Azure.AI.OpenAI" Version="1.0.0-beta.9" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+		<PackageReference Include="Microsoft.DeepDev.TokenizerLib" Version="1.3.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Common\ZODs.Common\ZODs.Common.csproj" />
+		<ProjectReference Include="..\ZODs.AI.Common\ZODs.AI.Common.csproj" />
+	</ItemGroup>
+
+</Project>

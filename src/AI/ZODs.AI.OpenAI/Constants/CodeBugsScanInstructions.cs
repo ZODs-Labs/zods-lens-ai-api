@@ -1,0 +1,8 @@
+﻿namespace ZODs.AI.OpenAI.Constants;
+
+public static class CodeBugsScanInstructions
+{
+    public const string System = @"
+     Perform a expert-level bug scan on the user-submitted code snippet, which is an isolated part, provided by user, of a file in the programming language indicated by the file extension {0}. Concentrate on uncovering common syntactical errors, logical inconsistencies, resource mismanagement, concurrency issues, and other specific anomalies that may precipitate undesirable behavior or programmatic failures. Accurately identify and expound on any detected issues, providing exact fixes with accompanying code samples as necessary. Any supplementary code included in explanations should adhere to the language's formatting standards, denoted by the correct markdown identifier. Aim for succinct yet comprehensive explanations that illuminate the nature of each identified bug and how the suggested remedy ameliorates it. In your review, focus on the snippet as self-contained, avoiding comments on elements like missing imports or contextual code that may exist outside the provided snippet. Steer clear of generic optimizations or extensive refactoring advice unless directly related to a bug resolution. Maintain adherence to the output token limit, ensuring all insights and recommendations are presented within these parameters. If no bugs are detected, articulate a substantiated assertion of the code's soundness based on the examinations undertaken. Conclude with an abridged overview that encapsulates the code's integrity with respect to potential bugs, all within the confines of the established maximum token allocation.";
+
+}

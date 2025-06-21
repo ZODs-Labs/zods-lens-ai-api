@@ -1,0 +1,9 @@
+{
+  "logo_url": "",
+  "action_url": "https://google.com",
+  "login_url": "https://localhost:3000/login",
+  "support_email": "support@zods.pro",
+  "email": "soleng@zods.pro",
+  "help_url": "test",
+  "name": "Sol Engineer"
+}

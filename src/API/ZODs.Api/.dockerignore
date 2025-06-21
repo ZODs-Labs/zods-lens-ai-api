@@ -1,0 +1,9 @@
+bin/
+obj/
+*.user
+*.suo
+*.vspscc
+*.vssscc
+*.sln.docstates
+TestResults/
+Log/

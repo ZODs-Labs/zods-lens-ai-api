@@ -1,0 +1,136 @@
+name: CI/CD
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - release/*
+
+jobs:
+  build:
+    name: Build and Push to GHCR
+    runs-on: ubuntu-latest
+    outputs:
+      docker_image_tag: ${{ steps.set_docker_image_tag.outputs.docker_image_tag }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Determine Docker Image Tag
+        id: set_docker_image_tag
+        run: echo "::set-output name=docker_image_tag::${GITHUB_REF#refs/heads/release/}"
+
+      - name: Login to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GH_PAT }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and Push ZODs API to GHCR
+        uses: docker/build-push-action@v4
+        with:
+          context: "{{defaultContext}}:src"
+          file: API/ZODs.Api/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/zods-api:${{ steps.set_docker_image_tag.outputs.docker_image_tag }}
+
+  create-environment-variables:
+    name: Configure Kubernetes Environment
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      docker_image_tag: ${{ needs.build.outputs.docker_image_tag  }}
+
+    steps:
+      - name: Set the Kubernetes context
+        uses: azure/k8s-set-context@v2
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: v1.26.1
+
+      - name: Generate Environment Variables for API
+        run: |
+          echo "ASPNETCORE_ENVIRONMENT=Production" >> env.api.variables
+          echo "ZodsApiConfiguration__WebUrl=${{ vars.WEB_URL }}" >> env.api.variables
+          echo "IdentityConfiguration__JwtOptions__Issuer=${{ vars.JWT_ISSUER }}" >> env.api.variables
+          echo "IdentityConfiguration__JwtOptions__Audience=${{ vars.JWT_AUDIENCE }}" >> env.api.variables
+          echo "GoogleAuthOptions__ClientId=${{ vars.GOOGLE_OAUTH_CLIENT_ID }}" >> env.api.variables
+          echo "GoogleAuthOptions__RedirectUri=${{ vars.GOOGLE_OAUTH_REDIRECT_URL }}" >> env.api.variables
+          echo "GoogleAuthOptions__JavaScriptOrigin=${{ vars.GOOGLE_OAUTH_JAVASCRIPT_ORIGIN }}" >> env.api.variables
+          echo "EmailOptions__MailLogoUrl=${{ vars.MAIL_LOGO_URL }}" >> env.api.variables
+          echo "EmailOptions__LoginUrl=${{ vars.WEB_LOGIN_URL }}" >> env.api.variables
+          echo "EmailOptions__SupportEmail=${{ vars.SUPPORT_EMAIL }}" >> env.api.variables
+          echo "EmailOptions__WebHelpPageUrl=${{ vars.WEB_HELP_PAGE_URL }}" >> env.api.variables
+          echo "PaymentConfiguration__ApiUrl=${{ vars.LEMON_SQUEEZY_API_URL }}" >> env.api.variables
+          echo "PaymentConfiguration__StoreId=${{ vars.LEMON_SQUEEZY_STORE_ID }}" >> env.api.variables
+          echo "PaymentConfiguration__Gpt3AICreditsVariantId=${{ vars.GPT3_AI_CREDITS_PAYMENT_VARIANT_ID }}" >> env.api.variables
+          echo "PaymentConfiguration__Gpt4AICreditsVariantId=${{ vars.GPT4_AI_CREDITS_PAYMENT_VARIANT_ID }}" >> env.api.variables
+          echo "PaymentConfiguration__PricingPlanCheckoutRedirectUrl=${{ vars.PRICING_PLAN_CHECKOUT_REDIRECT_URL }}" >> env.api.variables
+          echo "PaymentConfiguration__CreditsCheckoutRedirectUrl=${{ vars.CREDITS_CHECKOUT_REDIRECT_URL }}" >> env.api.variables
+          echo "PaymentConfiguration__TestMode=false" >> env.api.variables
+          echo "AWS__LogGroup=${{ vars.AWS_LOG_GROUP }}" >> env.api.variables
+          echo "MailJetOptions__ApiKey=${{ vars.MAILJET_API_KEY }}" >> env.api.variables
+
+      - name: Generate Secrets for API
+        run: |
+          echo "ConnectionStrings__ZODsCS=${{ secrets.SNIPPET_HUB_DATABASE_CONNECTION_STRING }}" >> env.api.secrets
+          echo "ConnectionStrings__RedisCS=${{ secrets.REDIS_CONNECTION_STRING }}" >> env.api.secrets
+          echo "IdentityConfiguration__JwtOptions__Key=${{ secrets.JWT_KEY }}" >> env.api.secrets
+          echo "GoogleAuthOptions__ClientSecret=${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}" >> env.api.secrets
+          echo "PaymentConfiguration__ApiKey=${{ secrets.LEMON_SQUEEZY_API_KEY }}" >> env.api.secrets
+          echo "PaymentConfiguration__SignatureSecret=${{ secrets.LEMON_SQUEEZY_WEBHOOK_SIGNATURE_SECRET }}" >> env.api.secrets
+          echo "AWS__AccessKey=${{ secrets.AWS_ACCESS_KEY }}" >> env.api.secrets
+          echo "AWS__SecretKey=${{ secrets.AWS_SECRET_KEY }}" >> env.api.secrets
+          echo "MailJetOptions__ApiSecret=${{ secrets.MAILJET_API_SECRET }}" >> env.api.secrets
+          echo "ResendClientOptions__ApiToken=${{ secrets.RESEND_API_KEY }}" >> env.api.secrets
+          echo "OpenAIConfiguration__ApiKey=${{ secrets.OPENAI_API_KEY }}" >> env.api.secrets
+          echo "TogetherAIOptions__ApiKey=${{ secrets.TOGETHER_AI_API_KEY }}" >> env.api.secrets
+
+      - name: Apply Secrets for ZODs API
+        run: |
+          kubectl delete secret zods-api-env-secrets --ignore-not-found
+          kubectl create secret generic zods-api-env-secrets --from-env-file=env.api.secrets
+
+      - name: Apply ConfigMap for ZODs API Environment Variables
+        run: |
+          kubectl delete configmap zods-api-env-variables-map --ignore-not-found
+          kubectl create configmap zods-api-env-variables-map --from-env-file=env.api.variables
+
+  deploy:
+    name: Kubernetes Deployment
+    needs: create-environment-variables
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set the Kubernetes context
+        uses: azure/k8s-set-context@v2
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+        # Additional step to scale down before deploying
+      - name: Scale Down Deployment
+        run: kubectl scale deployment zods-api --replicas=0
+
+      - name: Deploy ZODs API
+        uses: azure/k8s-deploy@v4
+        with:
+          namespace: default
+          strategy: basic
+          manifests: |
+            deploy/api/deployment.yaml
+          images: |
+            ghcr.io/${{ github.repository_owner }}/zods-api:${{ needs.create-environment-variables.outputs.docker_image_tag }}

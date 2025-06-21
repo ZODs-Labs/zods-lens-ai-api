@@ -1,0 +1,47 @@
+version: "3.4"
+
+services:
+  zods.api:
+    image: ${DOCKER_REGISTRY-}zodsapi
+    container_name: ZODs.API
+    ports:
+      - 5002:8080
+    build:
+      context: .
+      dockerfile: API/ZODs.Api/Dockerfile
+    depends_on:
+      - zods.db
+    links:
+      - zods.db
+    volumes:
+      - ~/.aws/:/root/.aws/
+
+  zods.db:
+    image: postgres
+    container_name: ZODs.DB
+    restart: always
+    ports:
+      - 5435:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: zods
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  zods.redis.cache:
+     container_name: ZODs.Redis.Cache
+     image: 'bitnami/redis:latest'
+     environment:
+       - ALLOW_EMPTY_PASSWORD=yes
+     volumes:
+       - redis_data:/data 
+
+volumes:
+    pgdata:
+      driver: local
+    redis_data:
+      driver: local
+networks:
+  default:
+    name: zods

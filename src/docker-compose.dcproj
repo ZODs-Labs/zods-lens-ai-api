@@ -1,0 +1,17 @@
+﻿
+<Project ToolsVersion="15.0" Sdk="Microsoft.Docker.Sdk">
+  <PropertyGroup Label="Globals">
+    <ProjectVersion>2.1</ProjectVersion>
+    <DockerTargetOS>Linux</DockerTargetOS>
+    <ProjectGuid>78a8b438-9799-4c3d-a7f6-2e53e1f6eb08</ProjectGuid>
+    <DockerServiceName>zods.api</DockerServiceName>
+    <UserSecretsId>5de589cd-12b3-4a95-87e9-fbae3de9478f</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="docker-compose.override.yml">
+      <DependentUpon>docker-compose.yml</DependentUpon>
+    </None>
+    <None Include="docker-compose.yml" />
+    <None Include=".dockerignore" />
+  </ItemGroup>
+</Project>
