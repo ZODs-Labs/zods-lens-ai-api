@@ -17,7 +17,7 @@ spec:
       containers:
         - name: zods-api
           # This image name will be replaced by the CI/CD pipeline
-          image: ghcr.io/ZODs-Labs/zods-lens-ai-api:v2.0.0
+          image: ghcr.io/ZODs-Labs/zods-lens-ai-api:v1.0.0
           imagePullPolicy: Always
           # livenessProbe:
           #   failureThreshold: 3
